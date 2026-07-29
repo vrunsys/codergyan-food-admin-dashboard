@@ -1,4 +1,6 @@
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { useDispatch } from "react-redux";
+import { setUser } from "~/store/userSlice";
 
 const AUTH_API_URL = import.meta.env.VITE_AUTH_API
 
@@ -55,11 +57,17 @@ export const useSelf = () => {
     return result;
   };
 
-  const { data: selfData, } = useQuery({
+  const { data: selfData, isSuccess } = useQuery({
     queryKey: ['self'],
     queryFn: selfReq,
     enabled: false,
     retry: false,
   })
+
+  const dispatch = useDispatch();
+
+  if (isSuccess) {
+    dispatch(setUser(selfData));
+  }
   return { selfData };
 }

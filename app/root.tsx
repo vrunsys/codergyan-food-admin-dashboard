@@ -12,6 +12,8 @@ import "./app.css";
 import { ConfigProvider } from "antd";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools/production";
+import { Provider } from "react-redux";
+import { store } from "./store/index";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -47,6 +49,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 const queryClient = new QueryClient();
 export default function App() {
   return (
+    <Provider store={store}>
     <QueryClientProvider client={queryClient}>
       <ReactQueryDevtools initialIsOpen={false} />
       <ConfigProvider theme={{
@@ -57,7 +60,8 @@ export default function App() {
       }}>
         <Outlet />
       </ConfigProvider>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </Provider>
   );
 }
 
