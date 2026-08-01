@@ -2,6 +2,7 @@ import { useMutation, useQueryClient, useQuery, useMutationState } from "@tansta
 import { useDispatch } from "react-redux";
 import { logout, setUser, type User } from "~/store/userSlice";
 import usePermissions from "~/hooks/usePermissions";
+import { useNavigate } from "react-router";
 
 
 
@@ -35,6 +36,7 @@ export const useLogin = () => {
   const { logoutMutate } = useLogout();
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { mutate: signIn } = useMutation({
     mutationKey: ['signIn'],
     mutationFn: signInReq,
@@ -46,6 +48,7 @@ export const useLogin = () => {
         return;
       }
       dispatch(setUser(selfData as User));
+      navigate('/');
     },
   })
   return { signIn };
@@ -69,14 +72,13 @@ export const useSelf = () => {
     return result;
   };
 
-  const { data: selfData, isSuccess } = useQuery({
+  const { data: selfData, isSuccess, isLoading } = useQuery({
     queryKey: ['self'],
     queryFn: selfReq,
-    enabled: false,
     retry: false,
   });
 
-  return { selfData };
+  return { selfData, isSuccess, isLoading, };
 }
 
 export const useLogout = () => {
