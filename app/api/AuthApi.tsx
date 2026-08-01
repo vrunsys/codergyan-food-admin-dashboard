@@ -9,8 +9,8 @@ import { useNavigate } from "react-router";
 const AUTH_API_URL = import.meta.env.VITE_AUTH_API;
 const REFRESH_ATTEMPTS = 3;
 
-const requestSelf = () =>
-  fetch(`${AUTH_API_URL}/auth/self`, {
+const requestSelf = async () =>
+  await fetch(`${AUTH_API_URL}/auth/self`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -43,6 +43,15 @@ const refreshAccessToken = async () => {
 
   throw lastError ?? new Error('Failed to refresh access token');
 };
+
+const requestLogout = async () =>
+  await fetch(`${AUTH_API_URL}/auth/logout`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  });
 
 type SignInData = {
   email: string;
@@ -119,13 +128,12 @@ export const useSelf = () => {
 export const useLogout = () => {
 
   const logoutReq = async () => {
-    const response = await fetch(`${AUTH_API_URL}/auth/logout`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
+    let response = await requestLogout();
+
+     if (response.status === 401) {
+      await refreshAccessToken();
+      response = await requestLogout();
+    }
 
     if (!response.ok) {
       throw new Error('Failed to logout');
