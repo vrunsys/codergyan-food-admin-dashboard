@@ -12,12 +12,11 @@ import {
 import { LockFilled, LockOutlined, UserOutlined } from "@ant-design/icons";
 import type { FC } from "react";
 import { Link } from "react-router";
-import { useLogin, useSelf } from "~/api/AuthApi";
+import { useLogin } from "~/api/AuthApi";
 
 type LoginPageProps = {};
 
 const LoginPage: FC<LoginPageProps> = () => {
-  const { selfData } = useSelf();
   const { signIn } = useLogin();
   return (
     <>

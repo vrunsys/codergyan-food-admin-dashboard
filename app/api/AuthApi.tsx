@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient, useQuery, useMutationState } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useDispatch } from "react-redux";
 import { logout, setUser, type User } from "~/store/userSlice";
 import usePermissions from "~/hooks/usePermissions";
@@ -6,7 +6,43 @@ import { useNavigate } from "react-router";
 
 
 
-const AUTH_API_URL = import.meta.env.VITE_AUTH_API
+const AUTH_API_URL = import.meta.env.VITE_AUTH_API;
+const REFRESH_ATTEMPTS = 3;
+
+const requestSelf = () =>
+  fetch(`${AUTH_API_URL}/auth/self`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  });
+
+const refreshAccessToken = async () => {
+  let lastError: Error | undefined;
+
+  for (let attempt = 0; attempt < REFRESH_ATTEMPTS; attempt += 1) {
+    try {
+      const response = await fetch(`${AUTH_API_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (response.ok) return;
+
+      lastError = new Error('Failed to refresh access token');
+    } catch (error) {
+      lastError = error instanceof Error
+        ? error
+        : new Error('Failed to refresh access token');
+    }
+  }
+
+  throw lastError ?? new Error('Failed to refresh access token');
+};
 
 type SignInData = {
   email: string;
@@ -56,19 +92,18 @@ export const useLogin = () => {
 
 export const useSelf = () => {
   const selfReq = async () => {
-    const response = await fetch(`${AUTH_API_URL}/auth/self`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
+    let response = await requestSelf();
+
+    if (response.status === 401) {
+      await refreshAccessToken();
+      response = await requestSelf();
+    }
 
     if (!response.ok) {
       throw new Error('Failed to get self');
     }
 
-    const result = await response.json();
+    const result = await response.json() as User;
     return result;
   };
 
@@ -82,7 +117,7 @@ export const useSelf = () => {
 }
 
 export const useLogout = () => {
-  
+
   const logoutReq = async () => {
     const response = await fetch(`${AUTH_API_URL}/auth/logout`, {
       method: 'POST',
