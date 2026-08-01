@@ -8,12 +8,7 @@ import type { RootState } from '../store';
 const NonAuthLayout: FC = () => {
   const {user} = useSelector((state: RootState) => state.user)
   if (user !== null) return <Navigate to={'/'} replace/>;
-  return (
-    <div>
-      NonAuth
-      <Outlet />
-    </div>
-  );
+  return <Outlet />;
 };
 
 export default NonAuthLayout;
