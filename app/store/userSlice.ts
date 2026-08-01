@@ -6,6 +6,13 @@ export interface User {
   lastName: string;
   email: string;
   role: string;
+  tenants: tenant | null;
+}
+
+interface tenant {
+  id: number;
+  name: string;
+  address: string;
 }
 
 interface AuthState {

@@ -65,7 +65,7 @@ const DashboardLayout: FC = () => {
         <Layout style={{ padding: "0" }}>
           <Header style={{ paddingLeft: '16px', paddingRight: '16px', backgroundColor: colorBgContainer }}>
             <Flex gap={"middle"} align="start" justify="space-between">
-              <Badge text="Global" status="success" />
+              <Badge text={`${user.role === 'admin' ? 'You are an admin' : user.tenants?.name }`} status="success" />
               <Space size={16} align="center" >
                 <Badge dot>
                   <BellFilled />
@@ -80,7 +80,7 @@ const DashboardLayout: FC = () => {
                     }
                   ]
                 }}>
-                  <Avatar>V</Avatar>
+                  <Avatar>{user.firstName.charAt(0)}{user.lastName.charAt(0)}</Avatar>
                 </Dropdown>
 
               </Space>

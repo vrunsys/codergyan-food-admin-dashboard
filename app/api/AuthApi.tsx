@@ -92,7 +92,14 @@ export const useLogin = () => {
         logoutMutate();
         return;
       }
-      dispatch(setUser(selfData as User));
+      dispatch(setUser({
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+        tenants: user.tenants || null,
+      }));
       navigate('/');
     },
   })
