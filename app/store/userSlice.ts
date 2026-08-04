@@ -15,7 +15,7 @@ interface tenant {
   address: string;
 }
 
-interface AuthState {
+export interface AuthState {
   user: User | null;
 }
 

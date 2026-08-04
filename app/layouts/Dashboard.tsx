@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useSelector } from "react-redux";
-import { Navigate, Outlet, NavLink } from "react-router";
+import { Navigate, Outlet, NavLink, href } from "react-router";
 import type { RootState } from "../store";
 import { Layout, Menu, Breadcrumb, theme, type MenuProps, Flex, Badge, Space, Dropdown, Avatar } from "antd";
 import {
@@ -8,11 +8,12 @@ import {
   BuildOutlined,
   GiftOutlined,
   HomeOutlined,
+  RightOutlined,
   ShoppingCartOutlined,
   UsergroupAddOutlined,
 } from "@ant-design/icons";
-import { Footer } from "antd/es/layout/layout";
 import { useLogout } from "~/api/AuthApi";
+
 const { Sider, Content, Header } = Layout;
 
 const items: MenuProps["items"] = [
@@ -47,12 +48,21 @@ const DashboardLayout: FC = () => {
   const {
     token: { colorWhite, colorBgContainer },
   } = theme.useToken();
+  const paths = window.location.pathname.split("/").map((path) => {
+      const title =  path.toLowerCase()
+      
+      return title === "" ? {title: "Home"} : {title: title};
+      
+
+  })
+  console.log(paths);
+  
   const { user } = useSelector((state: RootState) => state.user);
   const {logoutMutate} = useLogout();
   if (user === null) return <Navigate to={"/auth/login"} replace />;
   return (
-    <Layout>
-      <Layout>
+    <div>
+      <Layout style={{minHeight: '100vh'}}>
         <Sider theme="light" width={200} collapsible style={{ backgroundColor: colorWhite }}>
           <Menu
             theme="light"
@@ -86,12 +96,13 @@ const DashboardLayout: FC = () => {
               </Space>
             </Flex>
           </Header>
-          <Content >
+          <Content style={{ margin: "24px"}}>
+            <Breadcrumb separator={<RightOutlined/>} items={[...paths]}/>
             <Outlet />
           </Content>
         </Layout>
       </Layout>
-    </Layout>
+    </div>
   );
 };
 
