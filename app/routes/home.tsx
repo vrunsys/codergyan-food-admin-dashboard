@@ -98,14 +98,14 @@ export default function Home() {
             <Col span={24}>
               <Card
                 title={<CardTitle title="Sales" PrefixIcon={BarChartOutlined} />}
-                bordered={false}></Card>
+                variant={'borderless'}></Card>
             </Col>
           </Row>
 
         </Col>
       <Col span={12}>
         <Card
-          bordered={false}
+          variant={'borderless'}
           title={<CardTitle title="Recent orders" PrefixIcon={ShoppingCartOutlined} />}>
           <List
             className="demo-loadmore-list"

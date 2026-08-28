@@ -1,12 +1,21 @@
 import { describe, it, expect } from "vitest";
 import { render, screen, } from "@testing-library/react";
+import { Provider } from "react-redux";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import LoginPage from "../routes/login";
 import { MemoryRouter } from "react-router";
+import { store } from "../store";
+
+const queryClient = new QueryClient();
 
 describe("/auth/login page", () => {
   it("should render all required fields", () => {
     render(<MemoryRouter initialEntries={["/auth/login"]}>
-      <LoginPage />
+       <Provider store={store}>
+        <QueryClientProvider client={queryClient}>
+          <LoginPage />
+        </QueryClientProvider>
+       </Provider>
     </MemoryRouter>);
     expect(screen.getByText("Sign In")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Username")).toBeInTheDocument();
