@@ -1,8 +1,16 @@
-import {useUsers, type User} from '../api/users';
-import {Table} from 'antd';
+import {useUsers, type User} from '../../api/users';
+import {Space, Table} from 'antd';
+import UserFilter from './UserFilter';
+import { useState } from 'react';
+import NewUserDrawer from './NewUserDrawer';
+
 
 const Users = () => {
   const { usersData, isLoading, error } = useUsers();
+  const [open, setOpen] = useState(false);
+  const openDrawer = () => setOpen(true);
+  const closeDrawer = () => setOpen(false);
+  
   const columns = [
     {
       title: 'ID',
@@ -28,10 +36,16 @@ const Users = () => {
 
   
   return (
-    <div>
+    <Space direction="vertical" size={"large"} style={{ width: "100%", marginTop: 14}}>
       {isLoading && <p>Loading...</p>}
       {error && <p>{error.message}</p>}
+      <UserFilter onFilterChange={(filterName: string, filterValue: string) => {
+        console.log(filterName, filterValue);
+      }}
+      onClick={openDrawer}
+      />
       <Table
+        rowKey="id"
         dataSource={
           usersData?.length > 0 ? usersData.map((user: User) => ({
             id: user.id,
@@ -41,7 +55,8 @@ const Users = () => {
           })) : []
         }
         columns={columns} />
-    </div>
+      <NewUserDrawer isOpen={open} onClose={closeDrawer}/>
+    </Space>
   );
 };
 
