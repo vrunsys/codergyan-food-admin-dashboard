@@ -20,9 +20,9 @@ function UserFilter({onFilterChange, onClick}: UserFilterProps) {
                 placeholder="Filter"
                 onChange={(UserFilter) => onFilterChange('UserFilterQuery', UserFilter)}
                 options={[
-                  { value: 'admin', label: 'All' },
-                  { value: 'manager', label: 'Active' },
-                  { value: 'customer', label: 'Inactive' },
+                  { value: 'admin', label: 'Admin' },
+                  { value: 'manager', label: 'Manager' },
+                  { value: 'customer', label: 'Customer' },
                 ]}
               />
             </Col>

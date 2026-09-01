@@ -1,16 +1,23 @@
-import { Button, Drawer, Space } from "antd";
+import { Button, Drawer, Form, Space, theme } from "antd";
+import UserForm from "./forms/UserForm";
 
 type NewUserDrawerProps = {
   isOpen: boolean;
   onClose: () => void;
 };
 
-function NewUserDrawer({isOpen, onClose}: NewUserDrawerProps) {
+function NewUserDrawer({ isOpen, onClose }: NewUserDrawerProps) {
+  const { token: { colorBgLayout } } = theme.useToken()
   return (
     <Drawer
       open={isOpen}
       onClose={onClose}
       size={600}
+      styles={{
+        body: {
+          background: colorBgLayout,
+        }
+      }}
       extra={
         <Space>
           <Button onClick={onClose}>
@@ -22,7 +29,9 @@ function NewUserDrawer({isOpen, onClose}: NewUserDrawerProps) {
         </Space>
       }
       destroyOnHidden>
-      
+      <Form layout="vertical">
+        <UserForm />
+      </Form>
     </Drawer>
   );
 }
