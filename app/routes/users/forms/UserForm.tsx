@@ -54,7 +54,14 @@ const UserForm = () => {
                 <Form.Item label={"Confirm Password"} name={"confirmPassword"} rules={[{
                   required: true,
                   message: "Confirm Password is required"
-                }]}>
+                }, ({ getFieldValue }: any) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue('password') === value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(new Error('Passwords do not match'));
+                  },
+                })]}>
                   <Input type={'password'}/>
                 </Form.Item>
               </Col>

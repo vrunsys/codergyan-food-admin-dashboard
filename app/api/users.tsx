@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const AUTH_API_URL = import.meta.env.VITE_AUTH_API;
 const REFRESH_ATTEMPTS = 3;
@@ -9,6 +9,15 @@ export interface User {
   lastName: string;
   email: string;
   role: string;
+}
+
+export interface NewUser {
+  firstName: string;
+  lastName: string;
+  password: string;
+  email: string;
+  role: string;
+  tenantId: string;
 }
 
 export enum Role {
@@ -23,6 +32,17 @@ const getUsers = async () => {
     headers: {
       'Content-Type': 'application/json',
     },
+    credentials: 'include',
+  });
+};
+
+const createNewUser = async (user: NewUser) => {
+  return await fetch(`${AUTH_API_URL}/users`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(user),
     credentials: 'include',
   });
 };
@@ -43,5 +63,25 @@ export const useUsers = () => {
   })
 
   return { usersData, isLoading, error };
+};
+
+export const useCreateUser = () => {
+  const create = async (user: NewUser) => {
+    const response = await createNewUser(user);
+    if (!response.ok) {
+      return null;
+    }
+    return await response.json();
+  };
+
+  const queryClient = useQueryClient();
+  const { mutate: createUser, isSuccess } = useMutation({
+    mutationKey: ['createUser'],
+    mutationFn: create,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  })
+  return { createUser, isSuccess };
 };
 

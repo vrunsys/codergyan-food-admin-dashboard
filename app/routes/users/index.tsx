@@ -1,5 +1,5 @@
 import {useUsers, type User} from '../../api/users';
-import {Space, Table} from 'antd';
+import { Space, Table} from 'antd';
 import UserFilter from './UserFilter';
 import { useState } from 'react';
 import NewUserDrawer from './NewUserDrawer';
@@ -10,7 +10,7 @@ const Users = () => {
   const [open, setOpen] = useState(false);
   const openDrawer = () => setOpen(true);
   const closeDrawer = () => setOpen(false);
-  
+ 
   const columns = [
     {
       title: 'ID',
