@@ -3,6 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 const BASE_URL = import.meta.env.VITE_AUTH_API;
 const REFRESH_ATTEMPTS = 3;
 
+export interface Tenant {
+  id: string;
+  name: string;
+}
+
 const getTenants = async () => {
   return await fetch(`${BASE_URL}/tenants`, {
     method: 'GET',

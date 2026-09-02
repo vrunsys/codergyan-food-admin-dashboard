@@ -11,6 +11,12 @@ export interface User {
   role: string;
 }
 
+export enum Role {
+	CUSTOMER = "customer",
+	MANAGER = "manager",
+	ADMIN = "admin", 
+}
+
 const getUsers = async () => {
   return await fetch(`${AUTH_API_URL}/users`, {
     method: 'GET',

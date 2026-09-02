@@ -1,7 +1,9 @@
 import React from 'react';
 import { Card, Col, Form, Row, Input, Space, Select } from 'antd';
+import { useTenants, type Tenant } from '~/api/tenants';
 
 const UserForm = () => {
+  const { tenantsData } = useTenants();
   return (
     <Row>
       <Col span={24}>
@@ -9,17 +11,29 @@ const UserForm = () => {
           <Card title={"Basic Information"} variant='borderless'>
             <Row gutter={20}>
               <Col span={12}>
-                <Form.Item label={"First Name"} name={"firstName"}>
+                <Form.Item label={"First Name"} name={"firstName"} rules={[{
+                  required: true,
+                  message: "First Name is required"
+                }]}>
                   <Input/>
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label={"Last Name"} name={"lastName"}>
+                <Form.Item label={"Last Name"} name={"lastName"} rules={[{
+                  required: true,
+                  message: "Last Name is required"
+                }]}>
                   <Input />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label={"Email"} name={"email"}>
+                <Form.Item label={"Email"} name={"email"} rules={[{
+                  required: true,
+                  message: "Email is required",
+                }, {
+                  type: "email",
+                  message: "Invalid email"
+                }]}>
                   <Input type={'email'}/>
                 </Form.Item>
               </Col>
@@ -29,12 +43,18 @@ const UserForm = () => {
           <Card title={"Security Information"} variant='borderless'>
             <Row gutter={20}>
               <Col span={12}>
-                <Form.Item label={"Password"} name={"password"}>
+                <Form.Item label={"Password"} name={"password"} rules={[{
+                  required: true,
+                  message: "Password is required"
+                }]}>
                   <Input type={'password'}/>
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label={"Confirm Password"} name={"confirmPassword"}>
+                <Form.Item label={"Confirm Password"} name={"confirmPassword"} rules={[{
+                  required: true,
+                  message: "Confirm Password is required"
+                }]}>
                   <Input type={'password'}/>
                 </Form.Item>
               </Col>
@@ -44,7 +64,10 @@ const UserForm = () => {
           <Card title={"Role & Tenant Information"} variant='borderless'>
             <Row gutter={20}>
               <Col span={12}>
-                <Form.Item label={"Role"} name={"role"}>
+                <Form.Item label={"Role"} name={"role"} rules={[{
+                  required: true,
+                  message: "Role is required"
+                }]}>
                   <Select
                     style={{ width: '100%' }}
                     placeholder="Select Role"
@@ -57,15 +80,14 @@ const UserForm = () => {
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label={"Restaurant"} name={"tenantId"}>
+                <Form.Item label={"Restaurant"} name={"tenantId"} rules={[{
+                  required: true,
+                  message: "Restaurant is required"
+                }]}>
                   <Select
                     style={{ width: '100%' }}
                     placeholder="Restaurants"
-                    options={[
-                      { value: 'Tenant 1', label: 'Tenant-1' },
-                      { value: 'Tenant 2', label: 'Tenant-2' },
-                      { value: 'Tenant 3', label: 'Tenant-3' },
-                    ]}
+                    options={tenantsData?.map((tenant: Tenant) => ({ value: tenant.id, label: tenant.name }))}
                   />
                 </Form.Item>
               </Col>
