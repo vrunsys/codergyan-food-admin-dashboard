@@ -16,7 +16,7 @@ export interface NewUser {
   lastName: string;
   password: string;
   email: string;
-  role: string;
+  role: Role;
   tenantId: string;
 }
 
