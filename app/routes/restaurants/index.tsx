@@ -36,7 +36,6 @@ const Users = () => {
   
   return (
     <Space orientation="vertical" size={"large"} style={{ width: "100%", marginTop: 14}}>
-      {isLoading && <p>Loading...</p>}
       {error && <p>{error.message}</p>}
       <RestaurantsFilter onFilterChange={(filterName: string, filterValue: string) => {
         console.log(filterName, filterValue);
@@ -45,6 +44,7 @@ const Users = () => {
       />
       <Table
         rowKey="id"
+        loading={isLoading}
         dataSource={
           tenantsData?.tenants?.length > 0 ? tenantsData.tenants.map((tenant: any) => ({
             id: tenant.id,
