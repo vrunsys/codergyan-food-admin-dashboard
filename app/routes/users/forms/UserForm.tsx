@@ -94,7 +94,7 @@ const UserForm = () => {
                   <Select
                     style={{ width: '100%' }}
                     placeholder="Restaurants"
-                    options={tenantsData?.map((tenant: Tenant) => ({ value: tenant.id, label: tenant.name }))}
+                    options={tenantsData?.tenants?.map((tenant: Tenant) => ({ value: tenant.id, label: tenant.name }))}
                   />
                 </Form.Item>
               </Col>

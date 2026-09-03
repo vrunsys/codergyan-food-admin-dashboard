@@ -3,10 +3,15 @@ import { Space, Table} from 'antd';
 import UserFilter from './UserFilter';
 import { useState } from 'react';
 import NewUserDrawer from './NewUserDrawer';
+import { PER_PAGE, CURRENT_PAGE } from '~/constants';
 
 
 const Users = () => {
-  const { usersData, isLoading, error } = useUsers();
+  const [queryParams, setQueryParams] = useState({
+    perPage: PER_PAGE,
+    currentPage: CURRENT_PAGE,
+  });
+  const { usersData, isLoading, error } = useUsers(queryParams);
   const [open, setOpen] = useState(false);
   const openDrawer = () => setOpen(true);
   const closeDrawer = () => setOpen(false);
@@ -36,7 +41,7 @@ const Users = () => {
 
   
   return (
-    <Space direction="vertical" size={"large"} style={{ width: "100%", marginTop: 14}}>
+    <Space orientation="vertical" size={"large"} style={{ width: "100%", marginTop: 14}}>
       {isLoading && <p>Loading...</p>}
       {error && <p>{error.message}</p>}
       <UserFilter onFilterChange={(filterName: string, filterValue: string) => {
@@ -47,13 +52,21 @@ const Users = () => {
       <Table
         rowKey="id"
         dataSource={
-          usersData?.length > 0 ? usersData.map((user: User) => ({
+          usersData?.users?.length > 0 ? usersData.users.map((user: User) => ({
             id: user.id,
             name: user.firstName + ' ' + user.lastName,
             email: user.email,
             role: user.role,
           })) : []
         }
+        pagination={{
+          total: usersData?.count ?? 0,
+          current: queryParams.currentPage,
+          pageSize: queryParams.perPage,
+          onChange: (page, size) => {
+            setQueryParams({ currentPage: page, perPage: size });
+          },
+        }}
         columns={columns} />
       <NewUserDrawer isOpen={open} onClose={closeDrawer}/>
     </Space>

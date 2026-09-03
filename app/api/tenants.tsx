@@ -13,8 +13,12 @@ export interface NewTenant {
   address: string;
 }
 
-const getTenants = async () => {
-  return await fetch(`${BASE_URL}/tenants`, {
+const getTenants = async (queryParams: { perPage: number; currentPage: number }) => {
+  const params = new URLSearchParams({
+    perPage: queryParams.perPage.toString(),
+    currentPage: queryParams.currentPage.toString(),
+  });
+  return await fetch(`${BASE_URL}/tenants?${params}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -35,9 +39,9 @@ const createNewTenant = async (tenant: NewTenant) => {
 };
 
 
-const useTenants = () => {
+const useTenants = (queryParams: { perPage: number; currentPage: number }) => {
   const tenants = async () => {
-    const response = await getTenants();
+    const response = await getTenants(queryParams);
     if (!response.ok) {
       return null;
     }
@@ -45,7 +49,7 @@ const useTenants = () => {
   };
 
   const { data: tenantsData, isLoading, error } = useQuery({
-    queryKey: ['tenants'],
+    queryKey: ['tenants', queryParams],
     queryFn: tenants,
     retry: REFRESH_ATTEMPTS,
   });

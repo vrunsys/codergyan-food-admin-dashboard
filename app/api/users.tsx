@@ -26,8 +26,12 @@ export enum Role {
 	ADMIN = "admin", 
 }
 
-const getUsers = async () => {
-  return await fetch(`${AUTH_API_URL}/users`, {
+const getUsers = async (queryParams: { perPage: number; currentPage: number }) => {
+  const params = new URLSearchParams({
+    perPage: queryParams.perPage.toString(),
+    currentPage: queryParams.currentPage.toString(),
+  })
+  return await fetch(`${AUTH_API_URL}/users?${params}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -44,12 +48,13 @@ const createNewUser = async (user: NewUser) => {
     },
     body: JSON.stringify(user),
     credentials: 'include',
+    
   });
 };
 
-export const useUsers = () => {
+export const useUsers = (queryParams: { perPage: number; currentPage: number }) => {
   const users = async () => {
-    const response = await getUsers();
+    const response = await getUsers(queryParams);
     if (!response.ok) {
       return null;
     }
@@ -57,7 +62,7 @@ export const useUsers = () => {
   };
 
   const { data: usersData, isLoading, error } = useQuery({
-    queryKey: ['users'],
+    queryKey: ['users', queryParams],
     queryFn: users,
     retry: REFRESH_ATTEMPTS,
   })
