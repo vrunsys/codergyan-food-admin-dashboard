@@ -23,13 +23,15 @@ export interface NewUser {
 export enum Role {
 	CUSTOMER = "customer",
 	MANAGER = "manager",
-	ADMIN = "admin", 
+	ADMIN = "ADMIN", 
 }
 
-const getUsers = async (queryParams: { perPage: number; currentPage: number }) => {
+const getUsers = async (queryParams: { perPage: number; currentPage: number; q?: string | undefined; role?: Role | undefined }) => {
   const params = new URLSearchParams({
     perPage: queryParams.perPage.toString(),
     currentPage: queryParams.currentPage.toString(),
+    ...(queryParams.q && {'q': queryParams.q}),
+   ...(queryParams.role && {'role': queryParams.role}),
   })
   return await fetch(`${AUTH_API_URL}/users?${params}`, {
     method: 'GET',
@@ -52,7 +54,7 @@ const createNewUser = async (user: NewUser) => {
   });
 };
 
-export const useUsers = (queryParams: { perPage: number; currentPage: number }) => {
+export const useUsers = (queryParams: { perPage: number; currentPage: number; q?: string; role?: Role }) => {
   const users = async () => {
     const response = await getUsers(queryParams);
     if (!response.ok) {
@@ -80,13 +82,13 @@ export const useCreateUser = () => {
   };
 
   const queryClient = useQueryClient();
-  const { mutate: createUser, isSuccess } = useMutation({
+  const { mutate: createUser, isError } = useMutation({
     mutationKey: ['createUser'],
     mutationFn: create,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['users'] });
     },
   })
-  return { createUser, isSuccess };
+  return { createUser, isError };
 };
 

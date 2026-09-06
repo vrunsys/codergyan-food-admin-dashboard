@@ -1,7 +1,8 @@
 import {useUsers, type User} from '../../api/users';
 import { Space, Table} from 'antd';
 import UserFilter from './UserFilter';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { debounce } from 'lodash';
 import NewUserDrawer from './NewUserDrawer';
 import { PER_PAGE, CURRENT_PAGE } from '~/constants';
 
@@ -10,6 +11,8 @@ const Users = () => {
   const [queryParams, setQueryParams] = useState({
     perPage: PER_PAGE,
     currentPage: CURRENT_PAGE,
+    q: undefined,
+    role: undefined,
   });
   const { usersData, isLoading, error } = useUsers(queryParams);
   const [open, setOpen] = useState(false);
@@ -39,13 +42,24 @@ const Users = () => {
     },
   ];
 
-  
+  const debouncedOnFilterChange = useMemo(() => {
+    return debounce((value) => {
+      setQueryParams((prevParams) => ({ ...prevParams, 'q': value }));
+    }, 1000);
+  }, [])
+
+  const onFilterChange = (filterName: string, filterValue: string) => {
+    if(filterName === 'q') {
+      debouncedOnFilterChange(filterValue);
+      return;
+    } else {
+      setQueryParams((prevParams) => ({ ...prevParams, [filterName]: filterValue }));
+    }
+  };
   return (
     <Space orientation="vertical" size={"large"} style={{ width: "100%", marginTop: 14}}>
       {error && <p>{error.message}</p>}
-      <UserFilter onFilterChange={(filterName: string, filterValue: string) => {
-        console.log(filterName, filterValue);
-      }}
+      <UserFilter onFilterChange={onFilterChange}
       onClick={openDrawer}
       />
       <Table
@@ -64,7 +78,7 @@ const Users = () => {
           current: queryParams.currentPage,
           pageSize: queryParams.perPage,
           onChange: (page, size) => {
-            setQueryParams({ currentPage: page, perPage: size });
+            setQueryParams((prevParams) => ({ ...prevParams, currentPage: page, perPage: size }));
           },
         }}
         columns={columns} />

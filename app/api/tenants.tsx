@@ -39,6 +39,7 @@ const createNewTenant = async (tenant: NewTenant) => {
 };
 
 
+
 const useTenants = (queryParams: { perPage: number; currentPage: number }) => {
   const tenants = async () => {
     const response = await getTenants(queryParams);
@@ -66,7 +67,7 @@ const useNewTenant = () => {
   };
 
   const queryClient = useQueryClient();
-  const { mutate: createTenant, isSuccess } = useMutation({
+  const { mutate: createTenant, isError } = useMutation({
     mutationKey: ['createTenant'],
     mutationFn: create,
     onSuccess: () => {
@@ -74,7 +75,7 @@ const useNewTenant = () => {
     },
   })
   
-  return { createTenant, isSuccess };
+  return { createTenant, isError };
 };
 
 export { useTenants, useNewTenant };

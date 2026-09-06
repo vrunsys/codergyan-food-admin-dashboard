@@ -8,14 +8,15 @@ type NewUserDrawerProps = {
 };
 
 function NewUserDrawer({ isOpen, onClose }: NewUserDrawerProps) {
-  const { createUser, isSuccess } = useCreateUser()
+  const { createUser, isError } = useCreateUser()
   const [form] = Form.useForm();
   const { token: { colorBgLayout } } = theme.useToken()
   const onHandleSubmit = async () => {
     await form.validateFields();
     const user = form.getFieldsValue() as NewUser;
     createUser(user);
-    if (isSuccess) {
+    console.log(isError);
+    if (!isError) {
       form.resetFields();
       onClose();
     }

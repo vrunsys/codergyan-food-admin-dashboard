@@ -9,13 +9,13 @@ type NewTenantProps = {
 };
 
 function NewTenantDrawer({ isOpen, onClose }: NewTenantProps) {
-  const { createTenant, isSuccess } = useNewTenant();
+  const { createTenant, isError } = useNewTenant();
   const [form] = Form.useForm();
   const onHandleSubmit = async () => {
     await form.validateFields();
     const values = await form.getFieldsValue();
     createTenant(values);
-    if (isSuccess) {
+    if (!isError) {
       onClose();
       form.resetFields();
     }

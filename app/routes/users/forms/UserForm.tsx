@@ -3,7 +3,7 @@ import { Card, Col, Form, Row, Input, Space, Select } from 'antd';
 import { useTenants, type Tenant } from '~/api/tenants';
 
 const UserForm = () => {
-  const { tenantsData } = useTenants();
+  const { tenantsData } = useTenants({ perPage: 10, currentPage: 1 });
   return (
     <Row>
       <Col span={24}>
