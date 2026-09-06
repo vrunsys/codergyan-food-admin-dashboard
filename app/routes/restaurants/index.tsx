@@ -2,14 +2,16 @@ import { useTenants } from '../../api/tenants';
 import {Space, Table} from 'antd';
 import RestaurantsFilter from './RestaurantsFilter';
 import NewTenantDrawer from './NewTenantDrawer';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { PER_PAGE, CURRENT_PAGE } from '~/constants';
+import { debounce } from 'lodash';
 
 
 const Users = () => {
   const [queryParams, setQueryParams] = useState({
     perPage: PER_PAGE,
     currentPage: CURRENT_PAGE,
+    q: undefined
   });
   const { tenantsData, isLoading, error } = useTenants(queryParams);
   const [open, setOpen] = useState(false);
@@ -33,13 +35,27 @@ const Users = () => {
       key: 'address',
     }
   ];
+
+
+  const debouncedOnFilterChange = useMemo(() => {
+    return debounce((value) => {
+      setQueryParams((prevParams) => ({ ...prevParams, currentPage: 1, q: value }));
+    }, 1000);
+  }, [])
+
+  const onFilterChange = (filterName: string, filterValue: string) => {
+    if(filterName === 'q') {
+      debouncedOnFilterChange(filterValue);
+      return;
+    } else {
+      setQueryParams((prevParams) => ({ ...prevParams, [filterName]: filterValue }));
+    }
+  };
   
   return (
     <Space orientation="vertical" size={"large"} style={{ width: "100%", marginTop: 14}}>
       {error && <p>{error.message}</p>}
-      <RestaurantsFilter onFilterChange={(filterName: string, filterValue: string) => {
-        console.log(filterName, filterValue);
-      }}
+      <RestaurantsFilter onFilterChange={onFilterChange}
       onClick={openDrawer}
       />
       <Table
@@ -58,6 +74,9 @@ const Users = () => {
             current: queryParams.currentPage,
             pageSize: queryParams.perPage,
             onChange: (page, pageSize) => setQueryParams({ ...queryParams, currentPage: page, perPage: pageSize }),
+            showTotal: (total, range) => {
+              return `Showing ${range[0]} - ${range[1]} of ${total} restaurants`
+            },
           }
         }
         columns={columns} />

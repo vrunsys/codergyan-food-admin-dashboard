@@ -1,31 +1,33 @@
-import { Button, Drawer, Form, Space, theme } from "antd";
+import { Button, Drawer, Form, Space, theme, type FormInstance } from "antd";
 import UserForm from "./forms/UserForm";
-import { useCreateUser, type NewUser } from "~/api/users";
+import { useCreateUser, type NewUser, useUpdateUser, type User } from "~/api/users";
 
 type NewUserDrawerProps = {
   isOpen: boolean;
   onClose: () => void;
+  form: FormInstance<any>;
+  isEditing: boolean;
 };
 
-function NewUserDrawer({ isOpen, onClose }: NewUserDrawerProps) {
+function NewUserDrawer({ isOpen, onClose, form, isEditing }: NewUserDrawerProps) {
   const { createUser, isError } = useCreateUser()
-  const [form] = Form.useForm();
+  const { updateUser, isError: isUpdateError } = useUpdateUser()
   const { token: { colorBgLayout } } = theme.useToken()
   const onHandleSubmit = async () => {
     await form.validateFields();
-    const user = form.getFieldsValue() as NewUser;
-    createUser(user);
-    console.log(isError);
-    if (!isError) {
+    const user = form.getFieldsValue();
+    if (isEditing || isUpdateError) {
+      updateUser(user as User);
+    } else {
+      createUser(user as NewUser);
+    }
+   
+    if (!isError || !isUpdateError) {
       form.resetFields();
       onClose();
     }
   }
 
-  const onFormClose = () => {
-    form.resetFields();
-    onClose();
-  }
   return (
     <Drawer
       open={isOpen}
@@ -36,9 +38,10 @@ function NewUserDrawer({ isOpen, onClose }: NewUserDrawerProps) {
           background: colorBgLayout,
         }
       }}
+      title={isEditing ? "Edit User" : "New User"}
       extra={
         <Space>
-          <Button onClick={onFormClose} >
+          <Button onClick={onClose} >
             Close
           </Button>
           <Button type="primary" onClick={onHandleSubmit}>
@@ -48,7 +51,7 @@ function NewUserDrawer({ isOpen, onClose }: NewUserDrawerProps) {
       }
       destroyOnHidden>
       <Form layout="vertical" form={form}>
-        <UserForm />
+        <UserForm isEditing={isEditing} />
       </Form>
     </Drawer>
   );

@@ -2,13 +2,18 @@ import React from 'react';
 import { Card, Col, Form, Row, Input, Space, Select } from 'antd';
 import { useTenants, type Tenant } from '~/api/tenants';
 
-const UserForm = () => {
+const UserForm = ({ isEditing }: { isEditing: boolean }) => {
   const { tenantsData } = useTenants({ perPage: 10, currentPage: 1 });
   return (
     <Row>
       <Col span={24}>
         <Space orientation='vertical' size={'medium'}>
           <Card title={"Basic Information"} variant='borderless'>
+            {isEditing && <Col span={12}>
+              <Form.Item label={"userId"} name={"id"}>
+                <Input disabled/>
+              </Form.Item>
+            </Col>}
             <Row gutter={20}>
               <Col span={12}>
                 <Form.Item label={"First Name"} name={"firstName"} rules={[{
@@ -34,7 +39,7 @@ const UserForm = () => {
                   type: "email",
                   message: "Invalid email"
                 }]}>
-                  <Input type={'email'}/>
+                  <Input type={'email'} />
                 </Form.Item>
               </Col>
             </Row>
@@ -44,7 +49,7 @@ const UserForm = () => {
             <Row gutter={20}>
               <Col span={12}>
                 <Form.Item label={"Password"} name={"password"} rules={[{
-                  required: true,
+                  required: !isEditing,
                   message: "Password is required"
                 }]}>
                   <Input type={'password'}/>
@@ -52,11 +57,11 @@ const UserForm = () => {
               </Col>
               <Col span={12}>
                 <Form.Item label={"Confirm Password"} name={"confirmPassword"} rules={[{
-                  required: true,
+                  required: !isEditing,
                   message: "Confirm Password is required"
                 }, ({ getFieldValue }: any) => ({
                   validator(_, value) {
-                    if (!value || getFieldValue('password') === value) {
+                    if (!value || getFieldValue('password') === value || !isEditing) {
                       return Promise.resolve();
                     }
                     return Promise.reject(new Error('Passwords do not match'));
@@ -79,7 +84,7 @@ const UserForm = () => {
                     style={{ width: '100%' }}
                     placeholder="Select Role"
                     options={[
-                      { value: 'admin', label: 'Admin' },
+                      { value: 'ADMIN', label: 'Admin' },
                       { value: 'manager', label: 'Manager' },
                       { value: 'customer', label: 'Customer' },
                     ]}

@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useSelector } from "react-redux";
-import { Navigate, Outlet, NavLink, href } from "react-router";
+import { Navigate, Outlet, NavLink, href, useLocation } from "react-router";
 import type { RootState } from "../store";
 import { Layout, Menu, Breadcrumb, theme, type MenuProps, Flex, Badge, Space, Dropdown, Avatar } from "antd";
 import {
@@ -69,7 +69,8 @@ const DashboardLayout: FC = () => {
   })
   const { user } = useSelector((state: RootState) => state.user);
   const { logoutMutate } = useLogout();
-  if (user === null) return <Navigate to={"/auth/login"} replace />;
+  const location = useLocation();
+  if (user === null) return <Navigate to={`/auth/login?returnTo=${location.pathname}`} replace />;
   const menuItems = getMenuItems(user.role.toLowerCase());
   return (
     <div>
@@ -78,7 +79,7 @@ const DashboardLayout: FC = () => {
           <Menu
             theme="light"
             mode="vertical"
-            defaultSelectedKeys={['/']}
+            defaultSelectedKeys={[location.pathname]}
             items={menuItems}
             style={{ flex: 1, minWidth: 0 }}
           />

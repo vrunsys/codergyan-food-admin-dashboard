@@ -6,6 +6,7 @@ const REFRESH_ATTEMPTS = 3;
 export interface Tenant {
   id: string;
   name: string;
+  
 }
 
 export interface NewTenant {
@@ -13,10 +14,11 @@ export interface NewTenant {
   address: string;
 }
 
-const getTenants = async (queryParams: { perPage: number; currentPage: number }) => {
+const getTenants = async (queryParams: { perPage: number; currentPage: number; q?: string }) => {
   const params = new URLSearchParams({
     perPage: queryParams.perPage.toString(),
     currentPage: queryParams.currentPage.toString(),
+    ...(queryParams.q ? { q: queryParams.q } : {}),
   });
   return await fetch(`${BASE_URL}/tenants?${params}`, {
     method: 'GET',
@@ -38,9 +40,7 @@ const createNewTenant = async (tenant: NewTenant) => {
   });
 };
 
-
-
-const useTenants = (queryParams: { perPage: number; currentPage: number }) => {
+const useTenants = (queryParams: { perPage: number; currentPage: number; q?: string }) => {
   const tenants = async () => {
     const response = await getTenants(queryParams);
     if (!response.ok) {

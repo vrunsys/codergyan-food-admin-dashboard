@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Tenant } from "./tenants";
 
 const AUTH_API_URL = import.meta.env.VITE_AUTH_API;
 const REFRESH_ATTEMPTS = 3;
@@ -9,6 +10,8 @@ export interface User {
   lastName: string;
   email: string;
   role: string;
+  tenantId: number;
+  tenants: Tenant;
 }
 
 export interface NewUser {
@@ -54,6 +57,17 @@ const createNewUser = async (user: NewUser) => {
   });
 };
 
+const updateUserApi = async (user: User) => {
+  return await fetch(`${AUTH_API_URL}/users/${user.id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(user),
+    credentials: 'include',
+  });
+};
+
 export const useUsers = (queryParams: { perPage: number; currentPage: number; q?: string; role?: Role }) => {
   const users = async () => {
     const response = await getUsers(queryParams);
@@ -68,7 +82,6 @@ export const useUsers = (queryParams: { perPage: number; currentPage: number; q?
     queryFn: users,
     retry: REFRESH_ATTEMPTS,
   })
-
   return { usersData, isLoading, error };
 };
 
@@ -91,4 +104,24 @@ export const useCreateUser = () => {
   })
   return { createUser, isError };
 };
+
+export const useUpdateUser = () => {
+  const _update = async (user: User) => {
+    const response = await updateUserApi(user);
+    if (!response.ok) {
+      return null;
+    }
+    return await response.json();
+  }
+  const queryClient = useQueryClient();
+  const { mutate: updateUser, isError } = useMutation({
+    mutationKey: ['updateUser'],
+    mutationFn: _update,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  })
+  return { updateUser, isError };
+};
+
 
