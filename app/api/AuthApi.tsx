@@ -4,18 +4,15 @@ import { logout, setUser, type User } from "~/store/userSlice";
 import usePermissions from "~/hooks/usePermissions";
 import { useNavigate } from "react-router";
 
-
-
 const AUTH_API_URL = import.meta.env.VITE_AUTH_API;
 const REFRESH_ATTEMPTS = 3;
+const AUTH_SERVICE = "api/auth";
 
-const requestSelf = async () =>
-  await fetch(`${AUTH_API_URL}/auth/self`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include',
+const requestSelf = () =>
+  fetch(`${AUTH_API_URL}/${AUTH_SERVICE}/auth/self`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
   });
 
 const refreshAccessToken = async () => {
@@ -23,34 +20,28 @@ const refreshAccessToken = async () => {
 
   for (let attempt = 0; attempt < REFRESH_ATTEMPTS; attempt += 1) {
     try {
-      const response = await fetch(`${AUTH_API_URL}/auth/refresh`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
+      const response = await fetch(`${AUTH_API_URL}/${AUTH_SERVICE}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
       });
 
       if (response.ok) return;
 
-      lastError = new Error('Failed to refresh access token');
+      lastError = new Error("Failed to refresh access token");
     } catch (error) {
-      lastError = error instanceof Error
-        ? error
-        : new Error('Failed to refresh access token');
+      lastError = error instanceof Error ? error : new Error("Failed to refresh access token");
     }
   }
 
-  throw lastError ?? new Error('Failed to refresh access token');
+  throw lastError ?? new Error("Failed to refresh access token");
 };
 
-const requestLogout = async () =>
-  await fetch(`${AUTH_API_URL}/auth/logout`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include',
+const requestLogout = () =>
+  fetch(`${AUTH_API_URL}/${AUTH_SERVICE}/auth/logout`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
   });
 
 type SignInData = {
@@ -59,52 +50,52 @@ type SignInData = {
 };
 
 export const useLogin = () => {
-  const signInReq = async (data: SignInData) => {
-    const response = await fetch(`${AUTH_API_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to sign in');
-    }
-
-    const result = await response.json();
-    return result;
-  };
-
   const { isAllowed } = usePermissions();
   const { logoutMutate } = useLogout();
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const signInReq = async (data: SignInData) => {
+    const response = await fetch(`${AUTH_API_URL}/${AUTH_SERVICE}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to sign in");
+    }
+
+    return response.json();
+  };
+
   const { mutate: signIn } = useMutation({
-    mutationKey: ['signIn'],
+    mutationKey: ["signIn"],
     mutationFn: signInReq,
     onSuccess: async () => {
-      const selfData = await queryClient.fetchQuery({ queryKey: ['self'] });
-      const user = await selfData as User;
-      if(!isAllowed(user)) {
+      const user = (await queryClient.fetchQuery({ queryKey: ["self"] })) as User;
+      if (!isAllowed(user)) {
         logoutMutate();
         return;
       }
-      dispatch(setUser({
-        id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        role: user.role,
-        tenants: user.tenants || null,
-      }));
-      navigate('/');
+      dispatch(
+        setUser({
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role,
+          tenants: user.tenants || null,
+        })
+      );
+      navigate("/");
     },
-  })
+  });
+
   return { signIn };
-}
+};
 
 export const useSelf = () => {
   const selfReq = async () => {
@@ -116,46 +107,46 @@ export const useSelf = () => {
     }
 
     if (!response.ok) {
-      throw new Error('Failed to get self');
+      throw new Error("Failed to get self");
     }
 
-    const result = await response.json() as User;
-    return result;
+    return response.json() as Promise<User>;
   };
 
   const { data: selfData, isSuccess, isLoading } = useQuery({
-    queryKey: ['self'],
+    queryKey: ["self"],
     queryFn: selfReq,
     retry: false,
   });
 
-  return { selfData, isSuccess, isLoading, };
-}
+  return { selfData, isSuccess, isLoading };
+};
 
 export const useLogout = () => {
+  const dispatch = useDispatch();
 
   const logoutReq = async () => {
     let response = await requestLogout();
 
-     if (response.status === 401) {
+    if (response.status === 401) {
       await refreshAccessToken();
       response = await requestLogout();
     }
 
     if (!response.ok) {
-      throw new Error('Failed to logout');
+      throw new Error("Failed to logout");
     }
-    const result = await response.json();
-    return result;
+
+    return response.json();
   };
 
-  const dispatch = useDispatch();
   const { mutate: logoutMutate } = useMutation({
-    mutationKey: ['logout'],
+    mutationKey: ["logout"],
     mutationFn: logoutReq,
     onSuccess: () => {
       dispatch(logout());
     },
   });
+
   return { logoutMutate };
-}
+};
