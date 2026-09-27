@@ -1,20 +1,21 @@
-
 import type { FC } from 'react';
-import { Outlet } from 'react-router';
-import { Navigate } from 'react-router';
+import { Outlet, Navigate, useLocation } from 'react-router';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store';
-import { useLocation } from 'react-router';
+
+const ADMIN_ONLY_ROUTES = ['/users'];
 
 const NonAuthLayout: FC = () => {
-  const { user } = useSelector((state: RootState) => state.user)
+  const { user } = useSelector((state: RootState) => state.user);
   const location = useLocation();
-  
+
   if (user !== null) {
     const returnTo = new URLSearchParams(location.search).get('returnTo') || '/';
-    return <Navigate to={`${returnTo}`} replace/>;
+    const isAdminOnly = ADMIN_ONLY_ROUTES.some((route) => returnTo.startsWith(route));
+    const safePath = isAdminOnly && user.role !== 'ADMIN' ? '/' : returnTo;
+    return <Navigate to={safePath} replace />;
   }
-  
+
   return <Outlet />;
 };
 

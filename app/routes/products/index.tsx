@@ -6,10 +6,12 @@ import { useProducts, type Product, type ProductQueryParams } from "~/api/produc
 import { PER_PAGE, CURRENT_PAGE } from "~/constants";
 import type { AuthState } from "~/store/userSlice";
 import ProductFilter from "./ProductFilter";
+import NewProductDrawer from "./NewProductDrawer";
 
 const Products = () => {
   const { user } = useSelector((state: { user: AuthState }) => state.user);
   const isAdmin = user?.role === "ADMIN";
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const [queryParams, setQueryParams] = useState<ProductQueryParams>({
     page: CURRENT_PAGE,
@@ -104,7 +106,7 @@ const Products = () => {
       <ProductFilter
         queryParams={queryParams}
         onFilterChange={onFilterChange}
-        onClick={() => {}}
+        onClick={() => setDrawerOpen(true)}
         isAdmin={isAdmin}
       />
       <Table
@@ -122,6 +124,12 @@ const Products = () => {
           showTotal: (total, range) =>
             `Showing ${range[0]} - ${range[1]} of ${total} products`,
         }}
+      />
+      <NewProductDrawer
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        isAdmin={isAdmin}
+        tenantId={user?.tenants?.id?.toString()}
       />
     </Space>
   );

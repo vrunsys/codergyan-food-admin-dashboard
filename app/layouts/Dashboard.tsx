@@ -43,7 +43,7 @@ function getMenuItems(role: string): MenuProps["items"] {
     },
   ];
   switch (role) {
-    case "admin":
+    case "ADMIN":
       const menu = [...items]
       menu.splice(1, 0, {
         key: "/users",
