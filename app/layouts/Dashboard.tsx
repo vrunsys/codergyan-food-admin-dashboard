@@ -27,11 +27,6 @@ function getMenuItems(role: string): MenuProps["items"] {
       label: <NavLink to="/">Home</NavLink>,
     },
     {
-      key: "/restaurants",
-      icon: <BuildOutlined />,
-      label: <NavLink to="/restaurants">Restaurants</NavLink>,
-    },
-    {
       key: "/products",
       icon: <ShoppingCartOutlined />,
       label: <NavLink to="/products">Products</NavLink>,
@@ -49,6 +44,11 @@ function getMenuItems(role: string): MenuProps["items"] {
         key: "/users",
         icon: <UsergroupAddOutlined />,
         label: <NavLink to="/users">Users</NavLink>,
+      });
+      menu.splice(2, 0, {
+        key: "/restaurants",
+        icon: <BuildOutlined />,
+        label: <NavLink to="/restaurants">Restaurants</NavLink>,
       });
       return menu;
     default:
@@ -71,7 +71,7 @@ const DashboardLayout: FC = () => {
   const { logoutMutate } = useLogout();
   const location = useLocation();
   if (user === null) return <Navigate to={`/auth/login?returnTo=${location.pathname}`} replace />;
-  const menuItems = getMenuItems(user.role.toLowerCase());
+  const menuItems = getMenuItems(user.role);
   return (
     <div>
       <Layout style={{minHeight: '100vh'}}>

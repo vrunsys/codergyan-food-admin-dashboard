@@ -3,31 +3,101 @@ import {
   Col,
   Form,
   Input,
+  InputNumber,
+  Radio,
   Row,
   Select,
-  Switch,
-  Upload,
   Space,
-  InputNumber,
+  Switch,
   Typography,
+  Upload,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
-import { useCategories, type Category } from "~/api/categories";
+import {
+  useCategories,
+  type Category,
+  type CategoryAttribute,
+} from "~/api/categories";
 import { useAllTenants } from "~/api/tenants";
 
 const { TextArea } = Input;
 
 type ProductFormProps = {
   isAdmin: boolean;
+  isEditing?: boolean;
 };
 
-const ProductForm = ({ isAdmin }: ProductFormProps) => {
+const formatLabel = (value: string) =>
+  value
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+const getPriceConfiguration = (category?: Category) =>
+  category?.prizeConfiguration ?? category?.priceConfiguration ?? {};
+
+const ProductForm = ({ isAdmin, isEditing = false }: ProductFormProps) => {
+  const form = Form.useFormInstance();
   const { categoriesData, isLoading: categoriesLoading } = useCategories();
   const { tenantsOptions, isLoading: tenantsLoading } = useAllTenants();
+  const categoryId = Form.useWatch("categoryId", form);
+  const selectedCategory = categoriesData.find((category) => category._id === categoryId);
+  const priceConfigurations = Object.entries(getPriceConfiguration(selectedCategory));
+  const categoryAttributes = selectedCategory?.attributes ?? [];
+
+  const onCategoryChange = (selectedCategoryId: string) => {
+    const category = categoriesData.find(({ _id }) => _id === selectedCategoryId);
+    const priceConfiguration = Object.fromEntries(
+      Object.entries(getPriceConfiguration(category)).map(([name, configuration]) => [
+        name,
+        {
+          priceType: configuration.priceType,
+          availableOptions: {},
+        },
+      ])
+    );
+    const attributes = Object.fromEntries(
+      (category?.attributes ?? []).map((attribute) => [
+        attribute.name,
+        attribute.defaultValue,
+      ])
+    );
+
+    form.setFieldValue("priceConfiguration", priceConfiguration);
+    form.setFieldValue("attributes", attributes);
+  };
+
+  const renderAttributeInput = (attribute: CategoryAttribute) => {
+    if (attribute.widgetType === "switch") {
+      const checkedValue = attribute.options[0] ?? true;
+      const uncheckedValue = attribute.options[1] ?? false;
+
+      return (
+        <Switch
+          checkedChildren={String(checkedValue)}
+          unCheckedChildren={String(uncheckedValue)}
+        />
+      );
+    }
+
+    if (attribute.widgetType === "radio") {
+      return (
+        <Radio.Group
+          options={attribute.options.map((option) => ({ label: option, value: option }))}
+        />
+      );
+    }
+
+    return (
+      <Select
+        placeholder={`Select ${formatLabel(attribute.name).toLowerCase()}`}
+        options={attribute.options.map((option) => ({ label: option, value: option }))}
+      />
+    );
+  };
 
   return (
     <Row gutter={[16, 16]}>
-      {/* Basic Info */}
       <Col span={24}>
         <Card title="Basic Information" variant="borderless">
           <Row gutter={16}>
@@ -49,9 +119,10 @@ const ProductForm = ({ isAdmin }: ProductFormProps) => {
                 <Select
                   placeholder="Select category"
                   loading={categoriesLoading}
-                  options={categoriesData.map((cat: Category) => ({
-                    value: cat._id,
-                    label: cat.name,
+                  onChange={onCategoryChange}
+                  options={categoriesData.map((category) => ({
+                    value: category._id,
+                    label: category.name,
                   }))}
                 />
               </Form.Item>
@@ -78,9 +149,9 @@ const ProductForm = ({ isAdmin }: ProductFormProps) => {
                   <Select
                     placeholder="Select restaurant"
                     loading={tenantsLoading}
-                    options={tenantsOptions.map((t) => ({
-                      value: t.id,
-                      label: t.name,
+                    options={tenantsOptions.map((tenant) => ({
+                      value: tenant.id,
+                      label: tenant.name,
                     }))}
                   />
                 </Form.Item>
@@ -95,14 +166,13 @@ const ProductForm = ({ isAdmin }: ProductFormProps) => {
         </Card>
       </Col>
 
-      {/* Product Image */}
       <Col span={24}>
         <Card title="Product Image" variant="borderless">
           <Form.Item
             name="image"
             valuePropName="file"
-            getValueFromEvent={(e) => e?.file}
-            rules={[{ required: true, message: "Product image is required" }]}
+            getValueFromEvent={(event) => event?.file}
+            rules={[{ required: !isEditing, message: "Product image is required" }]}
           >
             <Upload
               listType="picture-card"
@@ -112,93 +182,122 @@ const ProductForm = ({ isAdmin }: ProductFormProps) => {
             >
               <Space direction="vertical" size={4} style={{ alignItems: "center" }}>
                 <PlusOutlined />
-                <Typography.Text style={{ fontSize: 12 }}>Upload</Typography.Text>
+                <Typography.Text style={{ fontSize: 12 }}>
+                  {isEditing ? "Replace" : "Upload"}
+                </Typography.Text>
               </Space>
             </Upload>
           </Form.Item>
         </Card>
       </Col>
 
-      {/* Price Configuration */}
       <Col span={24}>
         <Card title="Price Configuration" variant="borderless">
           <Typography.Text type="secondary" style={{ display: "block", marginBottom: 16 }}>
-            Configure size-based pricing and crust options.
+            Configure pricing for the selected category.
           </Typography.Text>
-          <Row gutter={[16, 8]}>
-            <Col span={24}>
-              <Typography.Text strong>Size (Base Price)</Typography.Text>
-            </Col>
-            {["Small", "Medium", "Large"].map((size) => (
-              <Col span={8} key={size}>
-                <Form.Item
-                  label={size}
-                  name={["priceConfiguration", "size", "availableOptions", size]}
-                  rules={[{ required: true, message: `${size} price is required` }]}
-                >
-                  <InputNumber
-                    prefix="₹"
-                    style={{ width: "100%" }}
-                    min={0}
-                    placeholder="0"
-                  />
-                </Form.Item>
+          {!selectedCategory && (
+            <Typography.Text type="secondary">
+              Select a category to display its pricing inputs.
+            </Typography.Text>
+          )}
+          {selectedCategory && priceConfigurations.length === 0 && (
+            <Typography.Text type="secondary">
+              This category has no price configuration.
+            </Typography.Text>
+          )}
+          {priceConfigurations.map(([configurationName, configuration]) => (
+            <Row gutter={[16, 8]} key={configurationName} style={{ marginBottom: 12 }}>
+              <Form.Item
+                name={["priceConfiguration", configurationName, "priceType"]}
+                initialValue={configuration.priceType}
+                preserve={false}
+                hidden
+              >
+                <Input />
+              </Form.Item>
+              <Col span={24}>
+                <Typography.Text strong>
+                  {formatLabel(configurationName)} ({formatLabel(configuration.priceType)} Price)
+                </Typography.Text>
               </Col>
-            ))}
-            <Col span={24} style={{ marginTop: 8 }}>
-              <Typography.Text strong>Crust (Additional Price)</Typography.Text>
-            </Col>
-            {[
-              { label: "Thin", defaultVal: 0 },
-              { label: "Thick", defaultVal: 50 },
-              { label: "Stuffed", defaultVal: 80 },
-            ].map(({ label }) => (
-              <Col span={8} key={label}>
-                <Form.Item
-                  label={label}
-                  name={["priceConfiguration", "crust", "availableOptions", label]}
-                  rules={[{ required: true, message: `${label} price is required` }]}
+              {configuration.options.map((option) => (
+                <Col
+                  xs={24}
+                  sm={configuration.options.length <= 2 ? 12 : 8}
+                  key={option}
                 >
-                  <InputNumber
-                    prefix="₹"
-                    style={{ width: "100%" }}
-                    min={0}
-                    placeholder="0"
-                  />
-                </Form.Item>
-              </Col>
-            ))}
-          </Row>
+                  <Form.Item
+                    label={option}
+                    name={[
+                      "priceConfiguration",
+                      configurationName,
+                      "availableOptions",
+                      option,
+                    ]}
+                    preserve={false}
+                    rules={[{ required: true, message: `${option} price is required` }]}
+                  >
+                    <InputNumber
+                      prefix="₹"
+                      style={{ width: "100%" }}
+                      min={0}
+                      placeholder="0"
+                    />
+                  </Form.Item>
+                </Col>
+              ))}
+            </Row>
+          ))}
         </Card>
       </Col>
 
-      {/* Attributes */}
       <Col span={24}>
         <Card title="Attributes" variant="borderless">
+          {!selectedCategory && (
+            <Typography.Text type="secondary">
+              Select a category to display its attributes.
+            </Typography.Text>
+          )}
+          {selectedCategory && categoryAttributes.length === 0 && (
+            <Typography.Text type="secondary">
+              This category has no attributes.
+            </Typography.Text>
+          )}
           <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item label="Veg / Non-Veg" name={["attributes", "isVeg"]}>
-                <Select
-                  placeholder="Select"
-                  options={[
-                    { value: true, label: "Veg" },
-                    { value: false, label: "Non-Veg" },
-                  ]}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item label="Spicy Level" name={["attributes", "spicyLevel"]}>
-                <Select
-                  placeholder="Select spicy level"
-                  options={[
-                    { value: "Low", label: "Low" },
-                    { value: "Medium", label: "Medium" },
-                    { value: "High", label: "High" },
-                  ]}
-                />
-              </Form.Item>
-            </Col>
+            {categoryAttributes.map((attribute) => {
+              const checkedValue = attribute.options[0] ?? true;
+              const uncheckedValue = attribute.options[1] ?? false;
+
+              return (
+                <Col xs={24} sm={12} key={attribute._id ?? attribute.name}>
+                  <Form.Item
+                    label={formatLabel(attribute.name)}
+                    name={["attributes", attribute.name]}
+                    initialValue={attribute.defaultValue}
+                    preserve={false}
+                    getValueProps={
+                      attribute.widgetType === "switch"
+                        ? (value) => ({ checked: value === true || value === checkedValue })
+                        : undefined
+                    }
+                    getValueFromEvent={
+                      attribute.widgetType === "switch"
+                        ? (checked: boolean) => (checked ? checkedValue : uncheckedValue)
+                        : undefined
+                    }
+                    rules={[
+                      {
+                        required: true,
+                        message: `${formatLabel(attribute.name)} is required`,
+                      },
+                    ]}
+                  >
+                    {renderAttributeInput(attribute)}
+                  </Form.Item>
+                </Col>
+              );
+            })}
           </Row>
         </Card>
       </Col>

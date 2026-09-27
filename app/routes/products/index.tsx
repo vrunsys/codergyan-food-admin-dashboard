@@ -12,6 +12,7 @@ const Products = () => {
   const { user } = useSelector((state: { user: AuthState }) => state.user);
   const isAdmin = user?.role === "ADMIN";
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const [queryParams, setQueryParams] = useState<ProductQueryParams>({
     page: CURRENT_PAGE,
@@ -23,6 +24,21 @@ const Products = () => {
   });
 
   const { productsData, isLoading, error } = useProducts(queryParams);
+
+  const openCreateDrawer = () => {
+    setEditingProduct(null);
+    setDrawerOpen(true);
+  };
+
+  const openEditDrawer = (product: Product) => {
+    setEditingProduct(product);
+    setDrawerOpen(true);
+  };
+
+  const closeDrawer = () => {
+    setDrawerOpen(false);
+    setEditingProduct(null);
+  };
 
   const debouncedOnFilterChange = useMemo(
     () =>
@@ -92,7 +108,7 @@ const Products = () => {
       key: "actions",
       render: (_: string, record: Product) => (
         <Space>
-          <Typography.Link onClick={() => console.log("edit", record._id)}>
+          <Typography.Link onClick={() => openEditDrawer(record)}>
             Edit
           </Typography.Link>
         </Space>
@@ -106,7 +122,7 @@ const Products = () => {
       <ProductFilter
         queryParams={queryParams}
         onFilterChange={onFilterChange}
-        onClick={() => setDrawerOpen(true)}
+        onClick={openCreateDrawer}
         isAdmin={isAdmin}
       />
       <Table
@@ -127,9 +143,10 @@ const Products = () => {
       />
       <NewProductDrawer
         isOpen={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
+        onClose={closeDrawer}
         isAdmin={isAdmin}
         tenantId={user?.tenants?.id?.toString()}
+        editingProduct={editingProduct}
       />
     </Space>
   );

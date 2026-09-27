@@ -6,6 +6,23 @@ const CATALOG_SERVICE = "api/catalog";
 export interface Category {
   _id: string;
   name: string;
+  prizeConfiguration?: Record<string, CategoryPriceConfiguration>;
+  priceConfiguration?: Record<string, CategoryPriceConfiguration>;
+  attributes?: CategoryAttribute[];
+}
+
+export interface CategoryPriceConfiguration {
+  priceType: "base" | "additional";
+  options: string[];
+  _id?: string;
+}
+
+export interface CategoryAttribute {
+  name: string;
+  widgetType: "radio" | "switch" | "select";
+  defaultValue: string | boolean;
+  options: string[];
+  _id?: string;
 }
 
 export interface NewCategory {

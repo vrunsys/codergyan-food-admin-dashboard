@@ -12,6 +12,9 @@ export interface Product {
   tenantId: string;
   isPublish: boolean;
   image?: string;
+  priceConfiguration: PriceConfiguration;
+  attributes: ProductAttribute[];
+  createdAt?: string;
 }
 
 export interface PriceConfiguration {
@@ -35,6 +38,14 @@ export interface NewProduct {
   priceConfiguration: PriceConfiguration;
   attributes: ProductAttribute[];
   image: File;
+}
+
+type ProductPayload = Omit<NewProduct, "image"> & {
+  image?: File;
+};
+
+export interface UpdateProduct extends ProductPayload {
+  _id: string;
 }
 
 export interface ProductQueryParams {
@@ -69,7 +80,7 @@ const getProducts = async (queryParams: ProductQueryParams) => {
   return response.json();
 };
 
-const createProductApi = async (product: NewProduct) => {
+const getProductFormData = (product: ProductPayload) => {
   const formData = new FormData();
   formData.append("name", product.name);
   formData.append("description", product.description);
@@ -78,7 +89,15 @@ const createProductApi = async (product: NewProduct) => {
   formData.append("isPublish", String(product.isPublish));
   formData.append("priceConfiguration", JSON.stringify(product.priceConfiguration));
   formData.append("attributes", JSON.stringify(product.attributes));
-  formData.append("image", product.image);
+  if (product.image) {
+    formData.append("image", product.image);
+  }
+
+  return formData;
+};
+
+const createProductApi = async (product: NewProduct) => {
+  const formData = getProductFormData(product);
 
   const response = await fetch(`${CATALOG_API_URL}/${CATALOG_SERVICE}/products`, {
     method: "POST",
@@ -88,6 +107,20 @@ const createProductApi = async (product: NewProduct) => {
 
   if (!response.ok) {
     throw new Error("Failed to create product");
+  }
+
+  return response.json();
+};
+
+const updateProductApi = async ({ _id, ...product }: UpdateProduct) => {
+  const response = await fetch(`${CATALOG_API_URL}/${CATALOG_SERVICE}/products/${_id}`, {
+    method: "PATCH",
+    credentials: "include",
+    body: getProductFormData(product),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to update product");
   }
 
   return response.json();
@@ -105,6 +138,20 @@ export const useCreateProduct = () => {
   });
 
   return { createProduct, isPending, isError };
+};
+
+export const useUpdateProduct = () => {
+  const queryClient = useQueryClient();
+
+  const { mutate: updateProduct, isPending, isError } = useMutation({
+    mutationKey: ["updateProduct"],
+    mutationFn: updateProductApi,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+
+  return { updateProduct, isPending, isError };
 };
 
 export const useProducts = (queryParams: ProductQueryParams) => {
