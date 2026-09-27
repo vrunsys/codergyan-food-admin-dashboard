@@ -75,4 +75,32 @@ const useNewTenant = () => {
   return { createTenant, isError };
 };
 
+const getAllTenants = async () => {
+  const response = await fetch(`${BASE_URL}/${AUTH_SERVICE}/tenants`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch tenants");
+  }
+
+  return response.json();
+};
+
+export const useAllTenants = () => {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["tenants", "all"],
+    queryFn: getAllTenants,
+  });
+
+  // Normalise: API may return { data: [...] }, { tenants: [...] }, or a bare array
+  const tenantsOptions: Tenant[] = Array.isArray(data)
+    ? data
+    : (data?.data ?? data?.tenants ?? []);
+
+  return { tenantsOptions, isLoading, error };
+};
+
 export { useTenants, useNewTenant };
