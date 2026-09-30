@@ -2,6 +2,7 @@ import {
   Card,
   Col,
   Form,
+  Image,
   Input,
   InputNumber,
   Radio,
@@ -13,11 +14,13 @@ import {
   Upload,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
+import { useEffect, useRef } from "react";
 import {
   useCategories,
   type Category,
   type CategoryAttribute,
 } from "~/api/categories";
+import type { Product } from "~/api/products";
 import { useAllTenants } from "~/api/tenants";
 
 const { TextArea } = Input;
@@ -25,6 +28,7 @@ const { TextArea } = Input;
 type ProductFormProps = {
   isAdmin: boolean;
   isEditing?: boolean;
+  editingProduct?: Product | null;
 };
 
 const formatLabel = (value: string) =>
@@ -36,14 +40,38 @@ const formatLabel = (value: string) =>
 const getPriceConfiguration = (category?: Category) =>
   category?.prizeConfiguration ?? category?.priceConfiguration ?? {};
 
-const ProductForm = ({ isAdmin, isEditing = false }: ProductFormProps) => {
+const ProductForm = ({
+  isAdmin,
+  isEditing = false,
+  editingProduct,
+}: ProductFormProps) => {
   const form = Form.useFormInstance();
+  const initializedProductId = useRef<string | null>(null);
   const { categoriesData, isLoading: categoriesLoading } = useCategories();
   const { tenantsOptions, isLoading: tenantsLoading } = useAllTenants();
   const categoryId = Form.useWatch("categoryId", form);
   const selectedCategory = categoriesData.find((category) => category._id === categoryId);
   const priceConfigurations = Object.entries(getPriceConfiguration(selectedCategory));
   const categoryAttributes = selectedCategory?.attributes ?? [];
+
+  useEffect(() => {
+    if (!isEditing || !editingProduct) {
+      initializedProductId.current = null;
+      return;
+    }
+
+    if (!selectedCategory || initializedProductId.current === editingProduct._id) {
+      return;
+    }
+
+    form.setFieldsValue({
+      priceConfiguration: editingProduct.priceConfiguration,
+      attributes: Object.fromEntries(
+        (editingProduct.attributes ?? []).map(({ name, value }) => [name, value])
+      ),
+    });
+    initializedProductId.current = editingProduct._id;
+  }, [editingProduct, form, isEditing, selectedCategory]);
 
   const onCategoryChange = (selectedCategoryId: string) => {
     const category = categoriesData.find(({ _id }) => _id === selectedCategoryId);
@@ -168,26 +196,38 @@ const ProductForm = ({ isAdmin, isEditing = false }: ProductFormProps) => {
 
       <Col span={24}>
         <Card title="Product Image" variant="borderless">
-          <Form.Item
-            name="image"
-            valuePropName="file"
-            getValueFromEvent={(event) => event?.file}
-            rules={[{ required: !isEditing, message: "Product image is required" }]}
-          >
-            <Upload
-              listType="picture-card"
-              maxCount={1}
-              beforeUpload={() => false}
-              accept="image/*"
+          <Space align="start" size={16}>
+            {isEditing && editingProduct?.image && (
+              <Image
+                src={editingProduct.image}
+                alt={editingProduct.name}
+                width={104}
+                height={104}
+                style={{ objectFit: "cover", borderRadius: 8 }}
+              />
+            )}
+            <Form.Item
+              name="image"
+              valuePropName="file"
+              getValueFromEvent={(event) => event?.file}
+              rules={[{ required: !isEditing, message: "Product image is required" }]}
+              style={{ marginBottom: 0 }}
             >
-              <Space direction="vertical" size={4} style={{ alignItems: "center" }}>
-                <PlusOutlined />
-                <Typography.Text style={{ fontSize: 12 }}>
-                  {isEditing ? "Replace" : "Upload"}
-                </Typography.Text>
-              </Space>
-            </Upload>
-          </Form.Item>
+              <Upload
+                listType="picture-card"
+                maxCount={1}
+                beforeUpload={() => false}
+                accept="image/*"
+              >
+                <Space direction="vertical" size={4} style={{ alignItems: "center" }}>
+                  <PlusOutlined />
+                  <Typography.Text style={{ fontSize: 12 }}>
+                    {isEditing ? "Replace" : "Upload"}
+                  </Typography.Text>
+                </Space>
+              </Upload>
+            </Form.Item>
+          </Space>
         </Card>
       </Col>
 
@@ -210,8 +250,6 @@ const ProductForm = ({ isAdmin, isEditing = false }: ProductFormProps) => {
             <Row gutter={[16, 8]} key={configurationName} style={{ marginBottom: 12 }}>
               <Form.Item
                 name={["priceConfiguration", configurationName, "priceType"]}
-                initialValue={configuration.priceType}
-                preserve={false}
                 hidden
               >
                 <Input />
@@ -235,7 +273,6 @@ const ProductForm = ({ isAdmin, isEditing = false }: ProductFormProps) => {
                       "availableOptions",
                       option,
                     ]}
-                    preserve={false}
                     rules={[{ required: true, message: `${option} price is required` }]}
                   >
                     <InputNumber
@@ -274,8 +311,6 @@ const ProductForm = ({ isAdmin, isEditing = false }: ProductFormProps) => {
                   <Form.Item
                     label={formatLabel(attribute.name)}
                     name={["attributes", attribute.name]}
-                    initialValue={attribute.defaultValue}
-                    preserve={false}
                     getValueProps={
                       attribute.widgetType === "switch"
                         ? (value) => ({ checked: value === true || value === checkedValue })

@@ -102,7 +102,11 @@ function NewProductDrawer({
       destroyOnHidden
     >
       <Form form={form} layout="vertical">
-        <ProductForm isAdmin={isAdmin} isEditing={Boolean(editingProduct)} />
+        <ProductForm
+          isAdmin={isAdmin}
+          isEditing={Boolean(editingProduct)}
+          editingProduct={editingProduct}
+        />
       </Form>
     </Drawer>
   );
