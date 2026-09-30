@@ -25,9 +25,38 @@ export interface CategoryAttribute {
   _id?: string;
 }
 
-export interface NewCategory {
-  name: string;
+export interface CategoryPriceConfig {
+  priceType: "base" | "additional";
+  options: string[];
 }
+
+export interface CategoryAttributeInput {
+  name: string;
+  widgetType: "switch" | "radio";
+  defaultValue: string;
+  options?: string[];
+}
+
+/**
+ * The catalog validator requires all three fields, so a name-only payload is
+ * rejected on create.
+ */
+export interface CategoryPayload {
+  name: string;
+  prizeConfiguration: Record<string, CategoryPriceConfig>;
+  attributes: CategoryAttributeInput[];
+}
+
+const readError = async (response: Response, fallback: string) => {
+  try {
+    const payload = await response.json();
+    const message = payload?.errors?.[0]?.msg;
+    if (message) return message;
+  } catch {
+    // fall through to the default message
+  }
+  return fallback;
+};
 
 const getCategories = async () => {
   const response = await fetch(`${CATALOG_API_URL}/${CATALOG_SERVICE}/categories`, {
@@ -37,13 +66,13 @@ const getCategories = async () => {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to fetch categories");
+    throw new Error(await readError(response, "Failed to fetch categories"));
   }
 
   return response.json();
 };
 
-const createCategory = async (category: NewCategory) => {
+const createCategory = async (category: CategoryPayload) => {
   const response = await fetch(`${CATALOG_API_URL}/${CATALOG_SERVICE}/categories`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -52,13 +81,13 @@ const createCategory = async (category: NewCategory) => {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to create category");
+    throw new Error(await readError(response, "Failed to create category"));
   }
 
   return response.json();
 };
 
-const updateCategory = async ({ _id, ...data }: Category) => {
+const updateCategory = async ({ _id, ...data }: CategoryPayload & { _id: string }) => {
   const response = await fetch(`${CATALOG_API_URL}/${CATALOG_SERVICE}/categories/${_id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -67,7 +96,7 @@ const updateCategory = async ({ _id, ...data }: Category) => {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to update category");
+    throw new Error(await readError(response, "Failed to update category"));
   }
 
   return response.json();
@@ -81,7 +110,7 @@ const deleteCategory = async (_id: string) => {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to delete category");
+    throw new Error(await readError(response, "Failed to delete category"));
   }
 
   return response.json();
@@ -104,7 +133,7 @@ export const useCategories = () => {
 export const useCreateCategory = () => {
   const queryClient = useQueryClient();
 
-  const { mutate: createCategoryMutate, isError } = useMutation({
+  const { mutate: createCategoryMutate, isPending, isError, error } = useMutation({
     mutationKey: ["createCategory"],
     mutationFn: createCategory,
     onSuccess: () => {
@@ -112,13 +141,13 @@ export const useCreateCategory = () => {
     },
   });
 
-  return { createCategoryMutate, isError };
+  return { createCategoryMutate, isPending, isError, error };
 };
 
 export const useUpdateCategory = () => {
   const queryClient = useQueryClient();
 
-  const { mutate: updateCategoryMutate, isError } = useMutation({
+  const { mutate: updateCategoryMutate, isPending, isError, error } = useMutation({
     mutationKey: ["updateCategory"],
     mutationFn: updateCategory,
     onSuccess: () => {
@@ -126,13 +155,13 @@ export const useUpdateCategory = () => {
     },
   });
 
-  return { updateCategoryMutate, isError };
+  return { updateCategoryMutate, isPending, isError, error };
 };
 
 export const useDeleteCategory = () => {
   const queryClient = useQueryClient();
 
-  const { mutate: deleteCategoryMutate, isError } = useMutation({
+  const { mutate: deleteCategoryMutate, isPending, isError, error } = useMutation({
     mutationKey: ["deleteCategory"],
     mutationFn: deleteCategory,
     onSuccess: () => {
@@ -140,5 +169,5 @@ export const useDeleteCategory = () => {
     },
   });
 
-  return { deleteCategoryMutate, isError };
+  return { deleteCategoryMutate, isPending, isError, error };
 };

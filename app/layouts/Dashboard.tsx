@@ -4,9 +4,9 @@ import { Navigate, Outlet, NavLink, href, useLocation } from "react-router";
 import type { RootState } from "../store";
 import { Layout, Menu, Breadcrumb, theme, type MenuProps, Flex, Badge, Space, Dropdown, Avatar } from "antd";
 import {
+  AppstoreOutlined,
   BellFilled,
   BuildOutlined,
-  GiftOutlined,
   HomeOutlined,
   RightOutlined,
   ShoppingCartOutlined,
@@ -37,11 +37,6 @@ function getMenuItems(role: string): MenuProps["items"] {
       icon: <TagsOutlined />,
       label: <NavLink to="/coupons">Coupons</NavLink>,
     },
-    {
-      key: "/promos",
-      icon: <GiftOutlined />,
-      label: <NavLink to="/promos">Promos</NavLink>,
-    },
   ];
   switch (role) {
     case "ADMIN":
@@ -55,6 +50,11 @@ function getMenuItems(role: string): MenuProps["items"] {
         key: "/restaurants",
         icon: <BuildOutlined />,
         label: <NavLink to="/restaurants">Restaurants</NavLink>,
+      });
+      menu.splice(3, 0, {
+        key: "/categories",
+        icon: <AppstoreOutlined />,
+        label: <NavLink to="/categories">Categories</NavLink>,
       });
       return menu;
     default:
