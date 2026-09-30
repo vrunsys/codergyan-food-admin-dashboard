@@ -7,6 +7,7 @@ export default [
       route("users", "routes/users/index.tsx"),
       route("restaurants", "routes/restaurants/index.tsx"),
       route("products", "routes/products/index.tsx"),
+      route("toppings", "routes/toppings/index.tsx"),
       route("categories", "routes/categories/index.tsx"),
       route("coupons", "routes/coupons/index.tsx"),
     ]),

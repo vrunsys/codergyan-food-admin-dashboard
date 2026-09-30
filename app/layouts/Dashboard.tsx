@@ -7,6 +7,7 @@ import {
   AppstoreOutlined,
   BellFilled,
   BuildOutlined,
+  GiftOutlined,
   HomeOutlined,
   RightOutlined,
   ShoppingCartOutlined,
@@ -31,6 +32,11 @@ function getMenuItems(role: string): MenuProps["items"] {
       key: "/products",
       icon: <ShoppingCartOutlined />,
       label: <NavLink to="/products">Products</NavLink>,
+    },
+    {
+      key: "/toppings",
+      icon: <GiftOutlined />,
+      label: <NavLink to="/toppings">Toppings</NavLink>,
     },
     {
       key: "/coupons",
