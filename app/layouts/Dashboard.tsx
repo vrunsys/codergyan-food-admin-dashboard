@@ -10,6 +10,7 @@ import {
   HomeOutlined,
   RightOutlined,
   ShoppingCartOutlined,
+  TagsOutlined,
   UsergroupAddOutlined,
 } from "@ant-design/icons";
 import { useLogout } from "~/api/AuthApi";
@@ -30,6 +31,11 @@ function getMenuItems(role: string): MenuProps["items"] {
       key: "/products",
       icon: <ShoppingCartOutlined />,
       label: <NavLink to="/products">Products</NavLink>,
+    },
+    {
+      key: "/coupons",
+      icon: <TagsOutlined />,
+      label: <NavLink to="/coupons">Coupons</NavLink>,
     },
     {
       key: "/promos",

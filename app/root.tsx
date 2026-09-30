@@ -9,7 +9,7 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { ConfigProvider } from "antd";
+import { App as AntdApp, ConfigProvider } from "antd";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools/production";
 import { Provider } from "react-redux";
@@ -58,7 +58,9 @@ export default function App() {
           colorLink: '#F65F43'
         }
       }}>
-        <Outlet />
+        <AntdApp>
+          <Outlet />
+        </AntdApp>
       </ConfigProvider>
       </QueryClientProvider>
     </Provider>
